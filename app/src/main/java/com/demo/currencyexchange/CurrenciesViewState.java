@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import com.demo.currencyexchange.mvibase.MviViewState;
 import com.google.auto.value.AutoValue;
 
+import java.util.Collections;
 import java.util.List;
 
 @AutoValue
@@ -19,6 +20,8 @@ abstract class CurrenciesViewState implements MviViewState {
 
     static CurrenciesViewState idle() {
         return builder()
+                .isLoading(false)
+                .currencies(Collections.emptyList())
                 .build();
     }
 

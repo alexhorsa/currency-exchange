@@ -120,7 +120,7 @@ public class CurrenciesViewModel extends AndroidViewModel
     private ObservableTransformer<CurrenciesAction.LoadCurrencies, CurrenciesResult.LoadCurrencies> loadCurrenciesProcessor =
             actions -> actions.flatMap(action ->
                     currenciesRepository.getRates("")
-                            .flatMap(result -> Single.just(result.rates))
+                            .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()

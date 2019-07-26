@@ -48,9 +48,9 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         final Currency currency = currencies.get(position);
         final CurrencyViewHolder currencyVH = (CurrencyViewHolder) holder;
 
-        currencyVH.name.setText(currency.name);
+        currencyVH.code.setText(currency.code);
 
-        currencyVH.name.addTextChangedListener(new TextWatcher() {
+        currencyVH.code.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -78,15 +78,16 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     public void updateData(List<Currency> currencies) {
         if (null == currencies) throw new NullPointerException();
         this.currencies = currencies;
+        notifyDataSetChanged();
     }
 
     public static class CurrencyViewHolder extends RecyclerView.ViewHolder {
 
-        EditText name;
+        EditText code;
 
         CurrencyViewHolder(@NonNull View itemView) {
             super(itemView);
-            name = itemView.findViewById(R.id.item_currency_name);
+            code = itemView.findViewById(R.id.item_currency_name);
         }
     }
 }
