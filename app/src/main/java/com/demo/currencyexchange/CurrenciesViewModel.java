@@ -24,6 +24,8 @@ import io.reactivex.subjects.PublishSubject;
 public class CurrenciesViewModel extends AndroidViewModel
         implements MviViewModel<CurrenciesIntent, CurrenciesViewState> {
 
+    private static final String DEFAULT_BASE = "EUR";
+
     private CurrenciesRepository currenciesRepository;
 
     @NonNull
@@ -81,7 +83,7 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private CurrenciesAction actionFromIntent(MviIntent intent) {
         if (intent instanceof CurrenciesIntent.InitialIntent) {
-            return CurrenciesAction.LoadCurrencies.load();
+            return CurrenciesAction.LoadCurrencies.load(DEFAULT_BASE);
         }
         throw new IllegalArgumentException("do not know how to treat this intent " + intent);
     }
@@ -119,7 +121,7 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private ObservableTransformer<CurrenciesAction.LoadCurrencies, CurrenciesResult.LoadCurrencies> loadCurrenciesProcessor =
             actions -> actions.flatMap(action ->
-                    currenciesRepository.getRates("")
+                    currenciesRepository.getRates(action.base())
                             .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
