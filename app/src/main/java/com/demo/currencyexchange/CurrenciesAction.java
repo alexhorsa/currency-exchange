@@ -21,8 +21,11 @@ interface CurrenciesAction extends MviAction {
     @AutoValue
     abstract class ComputeExchangeRate implements CurrenciesAction {
 
-        public static CurrenciesAction compute() {
-            return new AutoValue_CurrenciesAction_ComputeExchangeRate();
+        @NonNull
+        abstract Currency base();
+
+        public static CurrenciesAction compute(Currency base) {
+            return new AutoValue_CurrenciesAction_ComputeExchangeRate(base);
         }
 
     }

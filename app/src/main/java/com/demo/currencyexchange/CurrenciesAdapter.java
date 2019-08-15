@@ -6,16 +6,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
 public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    private final NumberFormat numberFormat = NumberFormat.getCurrencyInstance();
 
     private List<Currency> currencies;
 
@@ -24,6 +29,7 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     CurrenciesAdapter(List<Currency> currencies) {
         this.currencies = currencies;
+        setupNumberFormat();
     }
 
     Observable<Currency> getCurrencyClickObservable() {
@@ -50,7 +56,9 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         currencyVH.code.setText(currency.code);
 
-        currencyVH.code.addTextChangedListener(new TextWatcher() {
+        currencyVH.value.setText(currency.value.toString());
+
+        currencyVH.updateTextWatcher(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -63,6 +71,9 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
             @Override
             public void afterTextChanged(Editable editable) {
+                final String textValue = editable.toString();
+                if (textValue.isEmpty()) return;
+                currency.value = new BigDecimal(editable.toString());
                 currencyValueChangeObservable.onNext(currency);
             }
         });
@@ -81,13 +92,34 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         notifyDataSetChanged();
     }
 
+    private String formatCurrencyValue(BigDecimal value) {
+        return numberFormat.format(value);
+    }
+
+    private void setupNumberFormat() {
+        numberFormat.setMaximumFractionDigits(2);
+        numberFormat.setMinimumFractionDigits(0);
+    }
+
     public static class CurrencyViewHolder extends RecyclerView.ViewHolder {
 
-        EditText code;
+        TextView code;
+        EditText value;
+
+        private TextWatcher textWatcher;
 
         CurrencyViewHolder(@NonNull View itemView) {
             super(itemView);
             code = itemView.findViewById(R.id.item_currency_name);
+            value = itemView.findViewById(R.id.item_currency_value);
+        }
+
+        void updateTextWatcher(TextWatcher newTextWatcher) {
+            if (null != textWatcher) {
+                value.removeTextChangedListener(textWatcher);
+            }
+            textWatcher = newTextWatcher;
+            value.addTextChangedListener(newTextWatcher);
         }
     }
 }

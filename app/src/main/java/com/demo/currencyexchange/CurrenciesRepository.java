@@ -6,11 +6,29 @@ public class CurrenciesRepository {
 
     private ExchangeRatesClient.ExchangeRatesApi ratesApi;
 
+    private ExchangeRates cachedRates;
+
+    private boolean cacheIsDirty = false;
+
     CurrenciesRepository() {
         ratesApi = ExchangeRatesClient.createService(ExchangeRatesClient.ExchangeRatesApi.class);
     }
 
-    public Single<ExchangeRatesResponse> getRates(final String base) {
-        return ratesApi.getLatest(base);
+    public Single<ExchangeRates> getRates(final String base) {
+        final boolean useCached
+                = cachedRates != null
+                && !cacheIsDirty
+                && cachedRates.base.equals(base);
+        if (useCached) {
+            return Single.just(cachedRates);
+        }
+        return ratesApi
+                .getLatest(base)
+                .doOnSuccess(exchangeRates -> cachedRates = exchangeRates);
     }
+
+    public void refreshRates() {
+        cacheIsDirty = true;
+    }
+
 }

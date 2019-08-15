@@ -66,7 +66,13 @@ public class CurrenciesFragment extends Fragment
     public void onResume() {
         super.onResume();
 
-        disposables.add(currenciesViewModel.states().subscribe(this::render));
+        disposables.add(currenciesViewModel.states().subscribe(this::render, this::onError));
+        disposables.add(currenciesAdapter.getCurrencyClickObservable().subscribe(
+                this::onCurrencyClicked, this::onError
+        ));
+        disposables.add(currenciesAdapter.getCurrencyValueChangeObservable().subscribe(
+                this::onCurrencyClicked, this::onError
+        ));
     }
 
     @Override
@@ -104,5 +110,13 @@ public class CurrenciesFragment extends Fragment
 
     private Observable<CurrenciesIntent.RefreshIntent> refreshIntent() {
         return refreshIntentPublisher;
+    }
+
+    private void onCurrencyClicked(Currency currency) {
+        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency));
+    }
+
+    private void onError(Throwable throwable) {
+        Log.e(TAG, "onError", throwable);
     }
 }

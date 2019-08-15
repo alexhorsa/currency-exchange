@@ -11,11 +11,8 @@ import com.demo.currencyexchange.mvibase.MviView;
 import com.demo.currencyexchange.mvibase.MviViewModel;
 import com.demo.currencyexchange.mvibase.MviViewState;
 
-import java.util.ArrayList;
-
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.schedulers.Schedulers;
@@ -73,6 +70,10 @@ public class CurrenciesViewModel extends AndroidViewModel
                 .autoConnect(0);
     }
 
+    /**
+     * take only the first ever InitialIntent and all intents of other types
+     * to avoid reloading data on config changes
+     */
     private ObservableTransformer<CurrenciesIntent, CurrenciesIntent> intentFilter =
             intents -> intents.publish(shared ->
                     Observable.merge(
@@ -84,6 +85,9 @@ public class CurrenciesViewModel extends AndroidViewModel
     private CurrenciesAction actionFromIntent(MviIntent intent) {
         if (intent instanceof CurrenciesIntent.InitialIntent) {
             return CurrenciesAction.LoadCurrencies.load(DEFAULT_BASE);
+        }
+        if (intent instanceof CurrenciesIntent.RefreshIntent) {
+            return CurrenciesAction.ComputeExchangeRate.compute(((CurrenciesIntent.RefreshIntent) intent).base());
         }
         throw new IllegalArgumentException("do not know how to treat this intent " + intent);
     }
@@ -122,12 +126,16 @@ public class CurrenciesViewModel extends AndroidViewModel
     private ObservableTransformer<CurrenciesAction.LoadCurrencies, CurrenciesResult.LoadCurrencies> loadCurrenciesProcessor =
             actions -> actions.flatMap(action ->
                     currenciesRepository.getRates(action.base())
-                            .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
+//                            .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
-                            .map(CurrenciesResult.LoadCurrencies::success)
+                            .map(response
+                                    -> CurrenciesResult.LoadCurrencies.success(
+                                            response.base, response.toCurrenciesList(ExchangeRates.ONE_UNIT)
+                                    )
+                            )
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.
@@ -142,12 +150,12 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private ObservableTransformer<CurrenciesAction.ComputeExchangeRate, CurrenciesResult.LoadCurrencies> exchangeRatesProcessor =
             actions -> actions.flatMap(action ->
-                    Single.just(new ArrayList<Currency>(0))
+                            currenciesRepository.getRates(action.base().code)
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
-                            .map(CurrenciesResult.LoadCurrencies::success)
+                            .map(result -> CurrenciesResult.LoadCurrencies.success(result.base, result.toCurrenciesList(action.base().value)))
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.
@@ -162,9 +170,9 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private ObservableTransformer<CurrenciesAction, CurrenciesResult> actionProcessor =
             actions -> actions.publish(shared -> Observable.merge(
-                    // Match LoadTasks to loadTasksProcessor
+                    // Match LoadRates to loadRatesProcessor
                     shared.ofType(CurrenciesAction.LoadCurrencies.class).compose(loadCurrenciesProcessor),
-                    // Match ActivateTaskAction to populateTaskProcessor
+                    // Match ComputeRates to ratesProcessor
                     shared.ofType(CurrenciesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor)
                     .mergeWith(
                             // Error for not implemented actions

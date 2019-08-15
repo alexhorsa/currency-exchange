@@ -37,7 +37,7 @@ public class ExchangeRatesClient {
     public interface ExchangeRatesApi {
 
         @GET("/latest")
-        Single<ExchangeRatesResponse> getLatest(
+        Single<ExchangeRates> getLatest(
                 @Query("base") String baseCurrency
         );
 
