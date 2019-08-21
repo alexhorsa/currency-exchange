@@ -2,6 +2,7 @@ package com.demo.currencyexchange;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,27 +57,70 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         currencyVH.code.setText(currency.code);
 
+        currencyVH.value.clearFocus();
         currencyVH.value.setText(currency.value.toString());
 
         currencyVH.updateTextWatcher(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
+            private String textBefore = "";
+            private String textChanged;
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                if (!currencyVH.value.hasFocus()) return;
+                textBefore = s.toString();
             }
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                if (!currencyVH.value.hasFocus()) return;
+                Log.d("Adapter", "onTextChanged");
 
+                CharSequence strBeforeChange = charSequence.subSequence(0, start);
+                CharSequence strAfterChange = charSequence.subSequence(start + count, charSequence.length());
+                CharSequence strChange = charSequence.subSequence(start, start + count);
+
+                textChanged = strChange.toString();
+
+//                String result = strBeforeChange.toString() + strAfterChange + strChange;
+//                EditText editText = currencyVH.value;
+//                editText.removeTextChangedListener(this);
+//                editText.setText(result);
+//                editText.addTextChangedListener(this);
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
+                if (!currencyVH.value.hasFocus()) return;
+
                 final String textValue = editable.toString();
                 if (textValue.isEmpty()) return;
-                currency.value = new BigDecimal(editable.toString());
+                if (".".equals(textChanged)) return;
+
+                Log.d("Adapter", "afterTextChanged - currency " + currency.code);
+
+                String result;
+                if (textBefore.length() > editable.length()) { // Backspace detected
+                    result = textBefore.substring(0, textBefore.length() - 1);
+                } else {
+                    result = textBefore + textChanged;
+                }
+
+                EditText editText = currencyVH.value;
+                editText.removeTextChangedListener(this);
+                editText.setText(result);
+                editText.addTextChangedListener(this);
+
+                currency.value = new BigDecimal(result);
                 currencyValueChangeObservable.onNext(currency);
             }
         });
+        currencyVH.value.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                currencyVH.value.post(() -> currencyVH.value.setSelection(currencyVH.value.length()));
+            }
+        });
+
         currencyVH.itemView.setOnClickListener(ignored -> currencyClickObservable.onNext(currency));
     }
 

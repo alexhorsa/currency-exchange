@@ -97,6 +97,10 @@ public class CurrenciesFragment extends Fragment
             return;
         }
 
+        if (state.isLoading()) {
+            return;
+        }
+
         if (state.currencies().isEmpty()) {
 
         } else {
