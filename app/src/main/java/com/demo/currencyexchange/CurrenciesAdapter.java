@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -21,7 +21,7 @@ import io.reactivex.subjects.PublishSubject;
 
 public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private final NumberFormat numberFormat = NumberFormat.getCurrencyInstance();
+    private static final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
 
     private List<Currency> currencies;
 
@@ -30,7 +30,6 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     CurrenciesAdapter(List<Currency> currencies) {
         this.currencies = currencies;
-        setupNumberFormat();
     }
 
     Observable<Currency> getCurrencyClickObservable() {
@@ -57,8 +56,18 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         currencyVH.code.setText(currency.code);
 
+        String amountText;
+        if (position > 0) {
+            amountText = decimalFormat.format(currency.value);
+        } else {
+            amountText
+                    = currency.value.scale() >= 2
+                    ? decimalFormat.format(currency.value)
+                    : currency.value.toString();
+        }
+
         currencyVH.value.clearFocus();
-        currencyVH.value.setText(currency.value.toString());
+        currencyVH.value.setText(amountText);
 
         currencyVH.updateTextWatcher(new TextWatcher() {
 
@@ -76,17 +85,8 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 if (!currencyVH.value.hasFocus()) return;
                 Log.d("Adapter", "onTextChanged");
 
-                CharSequence strBeforeChange = charSequence.subSequence(0, start);
-                CharSequence strAfterChange = charSequence.subSequence(start + count, charSequence.length());
                 CharSequence strChange = charSequence.subSequence(start, start + count);
-
                 textChanged = strChange.toString();
-
-//                String result = strBeforeChange.toString() + strAfterChange + strChange;
-//                EditText editText = currencyVH.value;
-//                editText.removeTextChangedListener(this);
-//                editText.setText(result);
-//                editText.addTextChangedListener(this);
             }
 
             @Override
@@ -106,10 +106,10 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     result = textBefore + textChanged;
                 }
 
-                EditText editText = currencyVH.value;
-                editText.removeTextChangedListener(this);
-                editText.setText(result);
-                editText.addTextChangedListener(this);
+//                EditText editText = currencyVH.value;
+//                editText.removeTextChangedListener(this);
+//                editText.setText(result);
+//                editText.addTextChangedListener(this);
 
                 currency.value = new BigDecimal(result);
                 currencyValueChangeObservable.onNext(currency);
@@ -118,6 +118,10 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         currencyVH.value.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 currencyVH.value.post(() -> currencyVH.value.setSelection(currencyVH.value.length()));
+
+                if (position > 0) {
+                    currencyClickObservable.onNext(currency);
+                }
             }
         });
 
@@ -134,15 +138,6 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         if (null == currencies) throw new NullPointerException();
         this.currencies = currencies;
         notifyDataSetChanged();
-    }
-
-    private String formatCurrencyValue(BigDecimal value) {
-        return numberFormat.format(value);
-    }
-
-    private void setupNumberFormat() {
-        numberFormat.setMaximumFractionDigits(2);
-        numberFormat.setMinimumFractionDigits(0);
     }
 
     public static class CurrencyViewHolder extends RecyclerView.ViewHolder {

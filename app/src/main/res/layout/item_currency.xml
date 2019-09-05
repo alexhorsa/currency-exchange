@@ -17,6 +17,7 @@
         android:id="@+id/item_currency_value"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
+        android:gravity="end"
         android:text="125"
         android:inputType="numberDecimal"
         app:layout_constraintTop_toTopOf="parent"
