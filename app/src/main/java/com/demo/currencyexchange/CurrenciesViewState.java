@@ -15,6 +15,8 @@ abstract class CurrenciesViewState implements MviViewState {
 
     public abstract List<Currency> currencies();
 
+    public abstract boolean refreshAll();
+
     @Nullable
     abstract Throwable error();
 
@@ -22,6 +24,7 @@ abstract class CurrenciesViewState implements MviViewState {
         return builder()
                 .isLoading(false)
                 .currencies(Collections.emptyList())
+                .refreshAll(false)
                 .build();
     }
 
@@ -39,6 +42,8 @@ abstract class CurrenciesViewState implements MviViewState {
         public abstract Builder currencies(List<Currency> currencies);
 
         public abstract Builder error(Throwable error);
+
+        public abstract Builder refreshAll(boolean refreshAll);
 
         abstract CurrenciesViewState build();
     }

@@ -24,8 +24,11 @@ interface CurrenciesAction extends MviAction {
         @NonNull
         abstract Currency base();
 
-        public static CurrenciesAction compute(Currency base) {
-            return new AutoValue_CurrenciesAction_ComputeExchangeRate(base);
+        @NonNull
+        abstract boolean refreshAll();
+
+        public static CurrenciesAction compute(Currency base, boolean refreshAll) {
+            return new AutoValue_CurrenciesAction_ComputeExchangeRate(base, refreshAll);
         }
 
     }

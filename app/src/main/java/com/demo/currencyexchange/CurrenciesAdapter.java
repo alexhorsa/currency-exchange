@@ -62,6 +62,7 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         String amountText;
         if (position > 0) {
             amountText = decimalFormat.format(currency.value);
+            currencyVH.value.removeTextChangedListener(currencyWatcher);
         } else {
             amountText
                     = currency.value.scale() >= 2
@@ -143,11 +144,14 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         return currencies.size();
     }
 
-    public void updateData(List<Currency> currencies) {
+    public void updateData(List<Currency> currencies, boolean refreshAll) {
         if (null == currencies) throw new NullPointerException();
         this.currencies = currencies;
-//        notifyDataSetChanged();
-        notifyItemRangeChanged(1, currencies.size() - 1);
+        if (refreshAll) {
+            notifyDataSetChanged();
+        } else {
+            notifyItemRangeChanged(1, currencies.size() - 1);
+        }
     }
 
     public static class CurrencyViewHolder extends RecyclerView.ViewHolder {

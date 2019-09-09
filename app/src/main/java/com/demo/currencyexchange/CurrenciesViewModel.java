@@ -87,7 +87,8 @@ public class CurrenciesViewModel extends AndroidViewModel
             return CurrenciesAction.LoadCurrencies.load(DEFAULT_BASE);
         }
         if (intent instanceof CurrenciesIntent.RefreshIntent) {
-            return CurrenciesAction.ComputeExchangeRate.compute(((CurrenciesIntent.RefreshIntent) intent).base());
+            CurrenciesIntent.RefreshIntent refreshIntent = (CurrenciesIntent.RefreshIntent) intent;
+            return CurrenciesAction.ComputeExchangeRate.compute(refreshIntent.base(), refreshIntent.refreshAll());
         }
         throw new IllegalArgumentException("do not know how to treat this intent " + intent);
     }
@@ -109,7 +110,10 @@ public class CurrenciesViewModel extends AndroidViewModel
 
                     switch (loadResult.status()) {
                         case SUCCESS:
-                            return stateBuilder.isLoading(false).currencies(loadResult.currencies()).build();
+                            return stateBuilder.isLoading(false)
+                                    .currencies(loadResult.currencies())
+                                    .refreshAll(loadResult.refreshAll())
+                                    .build();
                         case FAILURE:
                             return stateBuilder.isLoading(false).error(loadResult.error()).build();
                         case IN_FLIGHT:
@@ -155,7 +159,11 @@ public class CurrenciesViewModel extends AndroidViewModel
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
-                            .map(result -> CurrenciesResult.LoadCurrencies.success(result.base, result.toCurrenciesList(action.base().value)))
+                            .map(result -> CurrenciesResult.LoadCurrencies.success(
+                                    result.base,
+                                    result.toCurrenciesList(action.base().value),
+                                    action.refreshAll())
+                            )
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.

@@ -71,7 +71,7 @@ public class CurrenciesFragment extends Fragment
                 this::onCurrencyClicked, this::onError
         ));
         disposables.add(currenciesAdapter.getCurrencyValueChangeObservable().subscribe(
-                this::onCurrencyClicked, this::onError
+                this::onCurrencyChanged, this::onError
         ));
     }
 
@@ -104,7 +104,10 @@ public class CurrenciesFragment extends Fragment
         if (state.currencies().isEmpty()) {
 
         } else {
-            currenciesAdapter.updateData(state.currencies());
+            currenciesAdapter.updateData(state.currencies(), state.refreshAll());
+            if (state.refreshAll()) {
+                currenciesRecyclerView.scrollToPosition(0);
+            }
         }
     }
 
@@ -117,7 +120,11 @@ public class CurrenciesFragment extends Fragment
     }
 
     private void onCurrencyClicked(Currency currency) {
-        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency));
+        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, true));
+    }
+
+    private void onCurrencyChanged(Currency currency) {
+        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, false));
     }
 
     private void onError(Throwable throwable) {

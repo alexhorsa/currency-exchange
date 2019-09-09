@@ -27,22 +27,30 @@ interface CurrenciesResult extends MviResult {
         @Nullable
         abstract List<Currency> currencies();
 
+        @NonNull
+        abstract boolean refreshAll();
+
         @Nullable
         abstract Throwable error();
 
         @NonNull
         static LoadCurrencies success(@NonNull String base, @NonNull List<Currency> currencyList) {
-            return new AutoValue_CurrenciesResult_LoadCurrencies(SUCCESS, base, currencyList, null);
+            return new AutoValue_CurrenciesResult_LoadCurrencies(SUCCESS, base, currencyList, false, null);
+        }
+
+        @NonNull
+        static LoadCurrencies success(@NonNull String base, @NonNull List<Currency> currencyList, boolean refreshAll) {
+            return new AutoValue_CurrenciesResult_LoadCurrencies(SUCCESS, base, currencyList, refreshAll, null);
         }
 
         @NonNull
         static LoadCurrencies failure(Throwable error) {
-            return new AutoValue_CurrenciesResult_LoadCurrencies(FAILURE, null,null, error);
+            return new AutoValue_CurrenciesResult_LoadCurrencies(FAILURE, null,null, false, error);
         }
 
         @NonNull
         static LoadCurrencies inFlight() {
-            return new AutoValue_CurrenciesResult_LoadCurrencies(IN_FLIGHT,null, null, null);
+            return new AutoValue_CurrenciesResult_LoadCurrencies(IN_FLIGHT,null, null, false, null);
         }
     }
 

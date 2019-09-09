@@ -21,8 +21,11 @@ interface CurrenciesIntent extends MviIntent {
         @NonNull
         abstract Currency base();
 
-        public static RefreshIntent create(Currency base) {
-            return new AutoValue_CurrenciesIntent_RefreshIntent(base);
+        @NonNull
+        abstract boolean refreshAll();
+
+        public static RefreshIntent create(Currency base, boolean refreshAll) {
+            return new AutoValue_CurrenciesIntent_RefreshIntent(base, refreshAll);
         }
     }
 }
