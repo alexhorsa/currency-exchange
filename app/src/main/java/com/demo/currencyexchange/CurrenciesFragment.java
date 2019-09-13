@@ -16,9 +16,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.demo.currencyexchange.mvibase.MviView;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 public class CurrenciesFragment extends Fragment
@@ -30,7 +33,9 @@ public class CurrenciesFragment extends Fragment
     private CurrenciesAdapter currenciesAdapter;
 
     private CurrenciesViewModel currenciesViewModel;
-    private PublishSubject<CurrenciesIntent.RefreshIntent> refreshIntentPublisher =
+    private PublishSubject<CurrenciesIntent.RefreshIntent> userInputIntentPublisher =
+            PublishSubject.create();
+    private PublishSubject<CurrenciesIntent.AutoRefreshIntent> autoRefreshIntentPublisher =
             PublishSubject.create();
     private CompositeDisposable disposables = new CompositeDisposable();
 
@@ -73,6 +78,7 @@ public class CurrenciesFragment extends Fragment
         disposables.add(currenciesAdapter.getCurrencyValueChangeObservable().subscribe(
                 this::onCurrencyChanged, this::onError
         ));
+        startRefreshRatesEverySecond();
     }
 
     @Override
@@ -87,7 +93,7 @@ public class CurrenciesFragment extends Fragment
 
     @Override
     public Observable<CurrenciesIntent> intents() {
-        return Observable.merge(initialIntent(), refreshIntent());
+        return Observable.merge(initialIntent(), userInputIntent(), autoRefreshIntent());
     }
 
     @Override
@@ -115,16 +121,36 @@ public class CurrenciesFragment extends Fragment
         return Observable.just(CurrenciesIntent.InitialIntent.create());
     }
 
-    private Observable<CurrenciesIntent.RefreshIntent> refreshIntent() {
-        return refreshIntentPublisher;
+    private Observable<CurrenciesIntent.RefreshIntent> userInputIntent() {
+        return userInputIntentPublisher;
+    }
+
+    private Observable<CurrenciesIntent.AutoRefreshIntent> autoRefreshIntent() {
+        return autoRefreshIntentPublisher;
     }
 
     private void onCurrencyClicked(Currency currency) {
-        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, true));
+        userInputIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, true));
     }
 
     private void onCurrencyChanged(Currency currency) {
-        refreshIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, false));
+        userInputIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, false));
+    }
+
+    private void startRefreshRatesEverySecond() {
+        disposables.add(Observable
+                .interval(1, TimeUnit.SECONDS, Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        ignored -> {
+                            final Currency base = currenciesAdapter.getBaseCurrency();
+                            if (null != base) {
+                                autoRefreshIntentPublisher.onNext(CurrenciesIntent.AutoRefreshIntent.create(base));
+                            }
+                        },
+                        this::onError
+                )
+        );
     }
 
     private void onError(Throwable throwable) {

@@ -32,4 +32,16 @@ interface CurrenciesAction extends MviAction {
         }
 
     }
+
+    @AutoValue
+    abstract class AutoRefreshRates implements CurrenciesAction {
+
+        @NonNull
+        abstract Currency base();
+
+        public static CurrenciesAction create(Currency base) {
+            return new AutoValue_CurrenciesAction_AutoRefreshRates(base);
+        }
+
+    }
 }

@@ -154,6 +154,12 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
     }
 
+    public Currency getBaseCurrency() {
+        if (null == currencies) return null;
+        if (currencies.isEmpty()) return null;
+        return currencies.get(0);
+    }
+
     public static class CurrencyViewHolder extends RecyclerView.ViewHolder {
 
         TextView code;

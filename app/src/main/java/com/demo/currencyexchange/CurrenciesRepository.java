@@ -4,6 +4,8 @@ import io.reactivex.Single;
 
 public class CurrenciesRepository {
 
+    static final String DEFAULT_BASE = "EUR";
+
     private ExchangeRatesClient.ExchangeRatesApi ratesApi;
 
     private ExchangeRates cachedRates;
@@ -27,7 +29,12 @@ public class CurrenciesRepository {
                 .doOnSuccess(exchangeRates -> cachedRates = exchangeRates);
     }
 
-    public void refreshRates() {
+    public Single<ExchangeRates> forceRefresh(final String base) {
+        invalidateCache();
+        return getRates(base);
+    }
+
+    public void invalidateCache() {
         cacheIsDirty = true;
     }
 

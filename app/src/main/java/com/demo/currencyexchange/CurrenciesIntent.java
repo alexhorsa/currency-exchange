@@ -28,4 +28,16 @@ interface CurrenciesIntent extends MviIntent {
             return new AutoValue_CurrenciesIntent_RefreshIntent(base, refreshAll);
         }
     }
+
+    @AutoValue
+    abstract class AutoRefreshIntent implements CurrenciesIntent {
+
+        @NonNull
+        abstract Currency base();
+
+        public static AutoRefreshIntent create(Currency base) {
+            return new AutoValue_CurrenciesIntent_AutoRefreshIntent(base);
+        }
+
+    }
 }

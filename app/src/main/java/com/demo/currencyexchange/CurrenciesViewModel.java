@@ -21,8 +21,6 @@ import io.reactivex.subjects.PublishSubject;
 public class CurrenciesViewModel extends AndroidViewModel
         implements MviViewModel<CurrenciesIntent, CurrenciesViewState> {
 
-    private static final String DEFAULT_BASE = "EUR";
-
     private CurrenciesRepository currenciesRepository;
 
     @NonNull
@@ -84,11 +82,15 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private CurrenciesAction actionFromIntent(MviIntent intent) {
         if (intent instanceof CurrenciesIntent.InitialIntent) {
-            return CurrenciesAction.LoadCurrencies.load(DEFAULT_BASE);
+            return CurrenciesAction.LoadCurrencies.load(CurrenciesRepository.DEFAULT_BASE);
         }
         if (intent instanceof CurrenciesIntent.RefreshIntent) {
             CurrenciesIntent.RefreshIntent refreshIntent = (CurrenciesIntent.RefreshIntent) intent;
             return CurrenciesAction.ComputeExchangeRate.compute(refreshIntent.base(), refreshIntent.refreshAll());
+        }
+        if (intent instanceof CurrenciesIntent.AutoRefreshIntent) {
+            CurrenciesIntent.AutoRefreshIntent autoRefreshIntent = (CurrenciesIntent.AutoRefreshIntent) intent;
+            return CurrenciesAction.AutoRefreshRates.create(autoRefreshIntent.base());
         }
         throw new IllegalArgumentException("do not know how to treat this intent " + intent);
     }
@@ -176,16 +178,42 @@ public class CurrenciesViewModel extends AndroidViewModel
                             // on the current frame and avoid jank.
                             .startWith(CurrenciesResult.LoadCurrencies.inFlight()));
 
+    private ObservableTransformer<CurrenciesAction.AutoRefreshRates, CurrenciesResult.LoadCurrencies> autoRefreshRatesProcessor =
+            actions -> actions.flatMap(action ->
+                    currenciesRepository.forceRefresh(action.base().code)
+                            // Transform the Single to an Observable to allow emission of multiple
+                            // events down the stream (e.g. the InFlight event)
+                            .toObservable()
+                            // Wrap returned data into an immutable object
+                            .map(result -> CurrenciesResult.LoadCurrencies.success(
+                                    result.base,
+                                    result.toCurrenciesList(action.base().value),
+                                    false)
+                            )
+                            // Wrap any error into an immutable object and pass it down the stream
+                            // without crashing.
+                            // Because errors are data and hence, should just be part of the stream.
+                            .onErrorReturn(CurrenciesResult.LoadCurrencies::failure)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            // Emit an InFlight event to notify the subscribers (e.g. the UI) we are
+                            // doing work and waiting on a response.
+                            // We emit it after observing on the UI thread to allow the event to be emitted
+                            // on the current frame and avoid jank.
+                            .startWith(CurrenciesResult.LoadCurrencies.inFlight()));
+
     private ObservableTransformer<CurrenciesAction, CurrenciesResult> actionProcessor =
             actions -> actions.publish(shared -> Observable.merge(
                     // Match LoadRates to loadRatesProcessor
                     shared.ofType(CurrenciesAction.LoadCurrencies.class).compose(loadCurrenciesProcessor),
                     // Match ComputeRates to ratesProcessor
-                    shared.ofType(CurrenciesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor)
+                    shared.ofType(CurrenciesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor),
+                    shared.ofType(CurrenciesAction.AutoRefreshRates.class).compose(autoRefreshRatesProcessor)
                     .mergeWith(
                             // Error for not implemented actions
                             shared.filter(v -> !(v instanceof CurrenciesAction.LoadCurrencies)
-                                    && !(v instanceof CurrenciesAction.ComputeExchangeRate))
+                                    && !(v instanceof CurrenciesAction.ComputeExchangeRate)
+                                    && !(v instanceof CurrenciesAction.AutoRefreshRates))
                                     .flatMap(w -> Observable.error(
                                             new IllegalArgumentException("Unknown Action type: " + w))))));
 
