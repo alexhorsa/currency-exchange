@@ -93,7 +93,11 @@ public class CurrenciesFragment extends Fragment
 
     @Override
     public Observable<CurrenciesIntent> intents() {
-        return Observable.merge(initialIntent(), userInputIntent(), autoRefreshIntent());
+        return Observable.merge(
+                initialIntent(),
+                userInputIntent(),
+                autoRefreshIntent()
+        );
     }
 
     @Override
@@ -126,7 +130,19 @@ public class CurrenciesFragment extends Fragment
     }
 
     private Observable<CurrenciesIntent.AutoRefreshIntent> autoRefreshIntent() {
-        return autoRefreshIntentPublisher;
+        CurrenciesIntent.RefreshIntent defaultUserInput =
+                CurrenciesIntent.RefreshIntent.create(
+                        Constants.INITIAL_BASE_RATE, false
+                );
+
+        Observable<CurrenciesIntent.RefreshIntent> latestUserInput =
+                userInputIntent().startWith(defaultUserInput);
+
+        return autoRefreshIntentPublisher
+                .withLatestFrom(
+                        latestUserInput,
+                        (autoRefreshIntent, latestInput) ->
+                                CurrenciesIntent.AutoRefreshIntent.create(latestInput.base()));
     }
 
     private void onCurrencyClicked(Currency currency) {
@@ -142,12 +158,7 @@ public class CurrenciesFragment extends Fragment
                 .interval(1, TimeUnit.SECONDS, Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        ignored -> {
-                            final Currency base = currenciesAdapter.getBaseCurrency();
-                            if (null != base) {
-                                autoRefreshIntentPublisher.onNext(CurrenciesIntent.AutoRefreshIntent.create(base));
-                            }
-                        },
+                        ignored -> autoRefreshIntentPublisher.onNext(CurrenciesIntent.AutoRefreshIntent.empty()),
                         this::onError
                 )
         );

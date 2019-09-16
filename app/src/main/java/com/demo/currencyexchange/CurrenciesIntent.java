@@ -1,6 +1,7 @@
 package com.demo.currencyexchange;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.demo.currencyexchange.mvibase.MviIntent;
 import com.google.auto.value.AutoValue;
@@ -32,11 +33,15 @@ interface CurrenciesIntent extends MviIntent {
     @AutoValue
     abstract class AutoRefreshIntent implements CurrenciesIntent {
 
-        @NonNull
+        @Nullable
         abstract Currency base();
 
         public static AutoRefreshIntent create(Currency base) {
             return new AutoValue_CurrenciesIntent_AutoRefreshIntent(base);
+        }
+
+        public static AutoRefreshIntent empty() {
+            return new AutoValue_CurrenciesIntent_AutoRefreshIntent(null);
         }
 
     }

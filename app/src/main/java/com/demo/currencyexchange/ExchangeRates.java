@@ -9,8 +9,6 @@ import java.util.Map;
 
 public class ExchangeRates {
 
-    public static final BigDecimal ONE_UNIT = new BigDecimal("1");
-
     public String base;
     public Map<String, String> rates;
 

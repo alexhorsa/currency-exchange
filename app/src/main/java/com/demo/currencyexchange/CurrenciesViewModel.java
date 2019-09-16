@@ -11,6 +11,8 @@ import com.demo.currencyexchange.mvibase.MviView;
 import com.demo.currencyexchange.mvibase.MviViewModel;
 import com.demo.currencyexchange.mvibase.MviViewState;
 
+import java.math.BigDecimal;
+
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -82,7 +84,7 @@ public class CurrenciesViewModel extends AndroidViewModel
 
     private CurrenciesAction actionFromIntent(MviIntent intent) {
         if (intent instanceof CurrenciesIntent.InitialIntent) {
-            return CurrenciesAction.LoadCurrencies.load(CurrenciesRepository.DEFAULT_BASE);
+            return CurrenciesAction.LoadCurrencies.load(Constants.INITIAL_BASE_RATE.code);
         }
         if (intent instanceof CurrenciesIntent.RefreshIntent) {
             CurrenciesIntent.RefreshIntent refreshIntent = (CurrenciesIntent.RefreshIntent) intent;
@@ -139,7 +141,7 @@ public class CurrenciesViewModel extends AndroidViewModel
                             // Wrap returned data into an immutable object
                             .map(response
                                     -> CurrenciesResult.LoadCurrencies.success(
-                                            response.base, response.toCurrenciesList(ExchangeRates.ONE_UNIT)
+                                            response.base, response.toCurrenciesList(BigDecimal.ONE)
                                     )
                             )
                             // Wrap any error into an immutable object and pass it down the stream

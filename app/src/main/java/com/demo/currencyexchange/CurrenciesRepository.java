@@ -4,8 +4,6 @@ import io.reactivex.Single;
 
 public class CurrenciesRepository {
 
-    static final String DEFAULT_BASE = "EUR";
-
     private ExchangeRatesClient.ExchangeRatesApi ratesApi;
 
     private ExchangeRates cachedRates;
