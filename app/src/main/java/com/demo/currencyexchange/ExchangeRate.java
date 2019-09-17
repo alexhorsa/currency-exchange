@@ -2,12 +2,12 @@ package com.demo.currencyexchange;
 
 import java.math.BigDecimal;
 
-public class Currency {
+public class ExchangeRate {
 
     public String code;
     public BigDecimal value;
 
-    private Currency(Builder builder) {
+    private ExchangeRate(Builder builder) {
         code = builder.code;
         value = builder.value;
     }
@@ -16,7 +16,7 @@ public class Currency {
         return new Builder();
     }
 
-    public static Builder newBuilder(Currency copy) {
+    public static Builder newBuilder(ExchangeRate copy) {
         Builder builder = new Builder();
         builder.code = copy.code;
         builder.value = copy.value;
@@ -40,8 +40,8 @@ public class Currency {
             return this;
         }
 
-        public Currency build() {
-            return new Currency(this);
+        public ExchangeRate build() {
+            return new ExchangeRate(this);
         }
     }
 }

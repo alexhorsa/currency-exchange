@@ -2,19 +2,19 @@ package com.demo.currencyexchange;
 
 import io.reactivex.Single;
 
-public class CurrenciesRepository {
+public class RatesRepository {
 
-    private ExchangeRatesClient.ExchangeRatesApi ratesApi;
+    private RatesApiClient.ExchangeRatesApi ratesApi;
 
-    private ExchangeRates cachedRates;
+    private RatesApiResponse cachedRates;
 
     private boolean cacheIsDirty = false;
 
-    CurrenciesRepository() {
-        ratesApi = ExchangeRatesClient.createService(ExchangeRatesClient.ExchangeRatesApi.class);
+    RatesRepository() {
+        ratesApi = RatesApiClient.createService(RatesApiClient.ExchangeRatesApi.class);
     }
 
-    public Single<ExchangeRates> getRates(final String base) {
+    public Single<RatesApiResponse> getRates(final String base) {
         final boolean useCached
                 = cachedRates != null
                 && !cacheIsDirty
@@ -24,10 +24,10 @@ public class CurrenciesRepository {
         }
         return ratesApi
                 .getLatest(base)
-                .doOnSuccess(exchangeRates -> cachedRates = exchangeRates);
+                .doOnSuccess(ratesApiResponse -> cachedRates = ratesApiResponse);
     }
 
-    public Single<ExchangeRates> forceRefresh(final String base) {
+    public Single<RatesApiResponse> forceRefresh(final String base) {
         invalidateCache();
         return getRates(base);
     }

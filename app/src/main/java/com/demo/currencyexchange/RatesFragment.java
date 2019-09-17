@@ -24,29 +24,29 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
-public class CurrenciesFragment extends Fragment
-        implements MviView<CurrenciesIntent, CurrenciesViewState> {
+public class RatesFragment extends Fragment
+        implements MviView<RatesIntent, RatesViewState> {
 
-    static final String TAG = "CurrenciesFragment";
+    static final String TAG = "RatesFragment";
 
     private RecyclerView currenciesRecyclerView;
-    private CurrenciesAdapter currenciesAdapter;
+    private RatesAdapter ratesAdapter;
 
-    private CurrenciesViewModel currenciesViewModel;
-    private PublishSubject<CurrenciesIntent.RefreshIntent> userInputIntentPublisher =
+    private RatesViewModel ratesViewModel;
+    private PublishSubject<RatesIntent.RefreshIntent> userInputIntentPublisher =
             PublishSubject.create();
-    private PublishSubject<CurrenciesIntent.AutoRefreshIntent> autoRefreshIntentPublisher =
+    private PublishSubject<RatesIntent.AutoRefreshIntent> autoRefreshIntentPublisher =
             PublishSubject.create();
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    static CurrenciesFragment newInstance() {
-        return new CurrenciesFragment();
+    static RatesFragment newInstance() {
+        return new RatesFragment();
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        currenciesAdapter = new CurrenciesAdapter(new ArrayList<>(0));
+        ratesAdapter = new RatesAdapter(new ArrayList<>(0));
     }
 
     @Nullable
@@ -60,9 +60,9 @@ public class CurrenciesFragment extends Fragment
         currenciesRecyclerView = view.findViewById(R.id.exchange_list);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
         currenciesRecyclerView.setLayoutManager(linearLayoutManager);
-        currenciesRecyclerView.setAdapter(currenciesAdapter);
+        currenciesRecyclerView.setAdapter(ratesAdapter);
 
-        currenciesViewModel = ViewModelProviders.of(this).get(CurrenciesViewModel.class);
+        ratesViewModel = ViewModelProviders.of(this).get(RatesViewModel.class);
 
         bindViewModel();
     }
@@ -71,11 +71,11 @@ public class CurrenciesFragment extends Fragment
     public void onResume() {
         super.onResume();
 
-        disposables.add(currenciesViewModel.states().subscribe(this::render, this::onError));
-        disposables.add(currenciesAdapter.getCurrencyClickObservable().subscribe(
+        disposables.add(ratesViewModel.states().subscribe(this::render, this::onError));
+        disposables.add(ratesAdapter.getCurrencyClickObservable().subscribe(
                 this::onCurrencyClicked, this::onError
         ));
-        disposables.add(currenciesAdapter.getCurrencyValueChangeObservable().subscribe(
+        disposables.add(ratesAdapter.getCurrencyValueChangeObservable().subscribe(
                 this::onCurrencyChanged, this::onError
         ));
         startRefreshRatesEverySecond();
@@ -88,11 +88,11 @@ public class CurrenciesFragment extends Fragment
     }
 
     private void bindViewModel() {
-        currenciesViewModel.processIntents(intents());
+        ratesViewModel.processIntents(intents());
     }
 
     @Override
-    public Observable<CurrenciesIntent> intents() {
+    public Observable<RatesIntent> intents() {
         return Observable.merge(
                 initialIntent(),
                 userInputIntent(),
@@ -101,7 +101,7 @@ public class CurrenciesFragment extends Fragment
     }
 
     @Override
-    public void render(CurrenciesViewState state) {
+    public void render(RatesViewState state) {
         if (state.error() != null) {
             Log.e(TAG, "render", state.error());
             return;
@@ -114,43 +114,43 @@ public class CurrenciesFragment extends Fragment
         if (state.currencies().isEmpty()) {
 
         } else {
-            currenciesAdapter.updateData(state.currencies(), state.refreshAll());
+            ratesAdapter.updateData(state.currencies(), state.refreshAll());
             if (state.refreshAll()) {
                 currenciesRecyclerView.scrollToPosition(0);
             }
         }
     }
 
-    private Observable<CurrenciesIntent.InitialIntent> initialIntent() {
-        return Observable.just(CurrenciesIntent.InitialIntent.create());
+    private Observable<RatesIntent.InitialIntent> initialIntent() {
+        return Observable.just(RatesIntent.InitialIntent.create());
     }
 
-    private Observable<CurrenciesIntent.RefreshIntent> userInputIntent() {
+    private Observable<RatesIntent.RefreshIntent> userInputIntent() {
         return userInputIntentPublisher;
     }
 
-    private Observable<CurrenciesIntent.AutoRefreshIntent> autoRefreshIntent() {
-        CurrenciesIntent.RefreshIntent defaultUserInput =
-                CurrenciesIntent.RefreshIntent.create(
+    private Observable<RatesIntent.AutoRefreshIntent> autoRefreshIntent() {
+        RatesIntent.RefreshIntent defaultUserInput =
+                RatesIntent.RefreshIntent.create(
                         Constants.INITIAL_BASE_RATE, false
                 );
 
-        Observable<CurrenciesIntent.RefreshIntent> latestUserInput =
+        Observable<RatesIntent.RefreshIntent> latestUserInput =
                 userInputIntent().startWith(defaultUserInput);
 
         return autoRefreshIntentPublisher
                 .withLatestFrom(
                         latestUserInput,
                         (autoRefreshIntent, latestInput) ->
-                                CurrenciesIntent.AutoRefreshIntent.create(latestInput.base()));
+                                RatesIntent.AutoRefreshIntent.create(latestInput.base()));
     }
 
-    private void onCurrencyClicked(Currency currency) {
-        userInputIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, true));
+    private void onCurrencyClicked(ExchangeRate exchangeRate) {
+        userInputIntentPublisher.onNext(RatesIntent.RefreshIntent.create(exchangeRate, true));
     }
 
-    private void onCurrencyChanged(Currency currency) {
-        userInputIntentPublisher.onNext(CurrenciesIntent.RefreshIntent.create(currency, false));
+    private void onCurrencyChanged(ExchangeRate exchangeRate) {
+        userInputIntentPublisher.onNext(RatesIntent.RefreshIntent.create(exchangeRate, false));
     }
 
     private void startRefreshRatesEverySecond() {
@@ -158,7 +158,7 @@ public class CurrenciesFragment extends Fragment
                 .interval(1, TimeUnit.SECONDS, Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        ignored -> autoRefreshIntentPublisher.onNext(CurrenciesIntent.AutoRefreshIntent.empty()),
+                        ignored -> autoRefreshIntentPublisher.onNext(RatesIntent.AutoRefreshIntent.empty()),
                         this::onError
                 )
         );

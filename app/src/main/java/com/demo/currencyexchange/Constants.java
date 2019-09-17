@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public class Constants {
 
-    static final Currency INITIAL_BASE_RATE =
-            Currency
+    static final ExchangeRate INITIAL_BASE_RATE =
+            ExchangeRate
                     .newBuilder()
                     .code("EUR")
                     .value(BigDecimal.ONE)

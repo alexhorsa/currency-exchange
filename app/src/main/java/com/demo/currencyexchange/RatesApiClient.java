@@ -10,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-public class ExchangeRatesClient {
+public class RatesApiClient {
 
     private static final String BASE_URL = "https://revolut.duckdns.org";
 
@@ -37,7 +37,7 @@ public class ExchangeRatesClient {
     public interface ExchangeRatesApi {
 
         @GET("/latest")
-        Single<ExchangeRates> getLatest(
+        Single<RatesApiResponse> getLatest(
                 @Query("base") String baseCurrency
         );
 

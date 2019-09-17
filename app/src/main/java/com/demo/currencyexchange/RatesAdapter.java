@@ -19,27 +19,27 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
 
-public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
 
-    private List<Currency> currencies;
+    private List<ExchangeRate> currencies;
 
-    private PublishSubject<Currency> currencyClickObservable = PublishSubject.create();
-    private PublishSubject<Currency> currencyValueChangeObservable = PublishSubject.create();
+    private PublishSubject<ExchangeRate> currencyClickObservable = PublishSubject.create();
+    private PublishSubject<ExchangeRate> currencyValueChangeObservable = PublishSubject.create();
 
     private ValueChangeWatcher currencyWatcher;
 
-    CurrenciesAdapter(List<Currency> currencies) {
+    RatesAdapter(List<ExchangeRate> currencies) {
         this.currencies = currencies;
         this.currencyWatcher = new ValueChangeWatcher(currencyValueChangeObservable);
     }
 
-    Observable<Currency> getCurrencyClickObservable() {
+    Observable<ExchangeRate> getCurrencyClickObservable() {
         return currencyClickObservable;
     }
 
-    Observable<Currency> getCurrencyValueChangeObservable() {
+    Observable<ExchangeRate> getCurrencyValueChangeObservable() {
         return currencyValueChangeObservable;
     }
 
@@ -54,27 +54,27 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        final Currency currency = currencies.get(position);
+        final ExchangeRate exchangeRate = currencies.get(position);
         final CurrencyViewHolder currencyVH = (CurrencyViewHolder) holder;
 
-        currencyVH.code.setText(currency.code);
+        currencyVH.code.setText(exchangeRate.code);
 
         String amountText;
         if (position > 0) {
-            amountText = decimalFormat.format(currency.value);
+            amountText = decimalFormat.format(exchangeRate.value);
             currencyVH.value.removeTextChangedListener(currencyWatcher);
         } else {
             amountText
-                    = currency.value.scale() >= 2
-                    ? decimalFormat.format(currency.value)
-                    : currency.value.toString();
+                    = exchangeRate.value.scale() >= 2
+                    ? decimalFormat.format(exchangeRate.value)
+                    : exchangeRate.value.toString();
         }
 
         currencyVH.value.clearFocus();
         currencyVH.value.setText(amountText);
 
         if (position == 0) {
-            currencyWatcher.setCurrency(currency);
+            currencyWatcher.setExchangeRate(exchangeRate);
             currencyWatcher.setTextView(currencyVH.value);
             currencyVH.updateTextWatcher(currencyWatcher);
         }
@@ -107,7 +107,7 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 //                if (textValue.isEmpty()) return;
 //                if (".".equals(textChanged)) return;
 //
-//                Log.d("Adapter", "afterTextChanged - currency " + currency.code);
+//                Log.d("Adapter", "afterTextChanged - exchangeRate " + exchangeRate.code);
 //
 //                String result;
 //                if (textBefore.length() > editable.length()) { // Backspace detected
@@ -121,8 +121,8 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 ////                editText.setText(result);
 ////                editText.addTextChangedListener(this);
 //
-//                currency.value = new BigDecimal(result);
-//                currencyValueChangeObservable.onNext(currency);
+//                exchangeRate.value = new BigDecimal(result);
+//                currencyValueChangeObservable.onNext(exchangeRate);
 //            }
 //        });
         currencyVH.value.setOnFocusChangeListener((v, hasFocus) -> {
@@ -130,12 +130,12 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 currencyVH.value.post(() -> currencyVH.value.setSelection(currencyVH.value.length()));
 
                 if (position > 0) {
-                    currencyClickObservable.onNext(currency);
+                    currencyClickObservable.onNext(exchangeRate);
                 }
             }
         });
 
-        currencyVH.itemView.setOnClickListener(ignored -> currencyClickObservable.onNext(currency));
+        currencyVH.itemView.setOnClickListener(ignored -> currencyClickObservable.onNext(exchangeRate));
     }
 
     @Override
@@ -144,7 +144,7 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         return currencies.size();
     }
 
-    public void updateData(List<Currency> currencies, boolean refreshAll) {
+    public void updateData(List<ExchangeRate> currencies, boolean refreshAll) {
         if (null == currencies) throw new NullPointerException();
         this.currencies = currencies;
         if (refreshAll) {
@@ -180,12 +180,12 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
         private TextView target;
 
-        private PublishSubject<Currency> valueChangeStream;
-        private Currency currency;
+        private PublishSubject<ExchangeRate> valueChangeStream;
+        private ExchangeRate exchangeRate;
         private String textBefore = "";
         private String textChanged;
 
-        ValueChangeWatcher(PublishSubject<Currency> valueChangeStream) {
+        ValueChangeWatcher(PublishSubject<ExchangeRate> valueChangeStream) {
             this.valueChangeStream = valueChangeStream;
         }
 
@@ -193,8 +193,8 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             target = textView;
         }
 
-        void setCurrency(Currency currency) {
-            this.currency = currency;
+        void setExchangeRate(ExchangeRate exchangeRate) {
+            this.exchangeRate = exchangeRate;
         }
 
         @Override
@@ -220,7 +220,7 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             if (textValue.isEmpty()) return;
             if (".".equals(textChanged)) return;
 
-            Log.d("Adapter", "afterTextChanged - currency " + currency.code);
+            Log.d("Adapter", "afterTextChanged - exchangeRate " + exchangeRate.code);
 
             String result;
             if (textBefore.length() > editable.length()) { // Backspace detected
@@ -234,8 +234,8 @@ public class CurrenciesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 //                editText.setText(result);
 //                editText.addTextChangedListener(this);
 
-            currency.value = new BigDecimal(result);
-            valueChangeStream.onNext(currency);
+            exchangeRate.value = new BigDecimal(result);
+            valueChangeStream.onNext(exchangeRate);
         }
     }
 }

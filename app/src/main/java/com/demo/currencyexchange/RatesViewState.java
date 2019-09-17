@@ -9,18 +9,18 @@ import java.util.Collections;
 import java.util.List;
 
 @AutoValue
-abstract class CurrenciesViewState implements MviViewState {
+abstract class RatesViewState implements MviViewState {
 
     public abstract boolean isLoading();
 
-    public abstract List<Currency> currencies();
+    public abstract List<ExchangeRate> currencies();
 
     public abstract boolean refreshAll();
 
     @Nullable
     abstract Throwable error();
 
-    static CurrenciesViewState idle() {
+    static RatesViewState idle() {
         return builder()
                 .isLoading(false)
                 .currencies(Collections.emptyList())
@@ -29,7 +29,7 @@ abstract class CurrenciesViewState implements MviViewState {
     }
 
     public static Builder builder() {
-        return new AutoValue_CurrenciesViewState.Builder();
+        return new AutoValue_RatesViewState.Builder();
     }
 
     public abstract Builder buildWith();
@@ -39,12 +39,12 @@ abstract class CurrenciesViewState implements MviViewState {
 
         public abstract Builder isLoading(boolean isLoading);
 
-        public abstract Builder currencies(List<Currency> currencies);
+        public abstract Builder currencies(List<ExchangeRate> currencies);
 
         public abstract Builder error(Throwable error);
 
         public abstract Builder refreshAll(boolean refreshAll);
 
-        abstract CurrenciesViewState build();
+        abstract RatesViewState build();
     }
 }

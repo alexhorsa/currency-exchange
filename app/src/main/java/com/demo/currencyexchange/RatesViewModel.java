@@ -20,35 +20,35 @@ import io.reactivex.functions.BiFunction;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
-public class CurrenciesViewModel extends AndroidViewModel
-        implements MviViewModel<CurrenciesIntent, CurrenciesViewState> {
+public class RatesViewModel extends AndroidViewModel
+        implements MviViewModel<RatesIntent, RatesViewState> {
 
-    private CurrenciesRepository currenciesRepository;
+    private RatesRepository ratesRepository;
 
     @NonNull
-    private PublishSubject<CurrenciesIntent> intentsSubject;
+    private PublishSubject<RatesIntent> intentsSubject;
     @NonNull
-    private Observable<CurrenciesViewState> statesObservables;
+    private Observable<RatesViewState> statesObservables;
 
-    public CurrenciesViewModel(@NonNull Application application) {
+    public RatesViewModel(@NonNull Application application) {
         super(application);
 
         intentsSubject = PublishSubject.create();
         statesObservables = compose();
 
-        currenciesRepository = new CurrenciesRepository();
+        ratesRepository = new RatesRepository();
     }
 
-    public void processIntents(Observable<CurrenciesIntent> intents) {
+    public void processIntents(Observable<RatesIntent> intents) {
         intents.subscribe(intentsSubject);
     }
 
     @Override
-    public Observable<CurrenciesViewState> states() {
+    public Observable<RatesViewState> states() {
         return statesObservables;
     }
 
-    private Observable<CurrenciesViewState> compose() {
+    private Observable<RatesViewState> compose() {
         return intentsSubject
                 .compose(intentFilter)
                 .map(this::actionFromIntent)
@@ -56,7 +56,7 @@ public class CurrenciesViewModel extends AndroidViewModel
                 // Cache each state and pass it to the reducer to create a new state from
                 // the previous cached one and the latest Result emitted from the action processor.
                 // The Scan operator is used here for the caching.
-                .scan(CurrenciesViewState.idle(), reducer)
+                .scan(RatesViewState.idle(), reducer)
                 // When a reducer just emits previousState, there's no reason to call render. In fact,
                 // redrawing the UI in cases like this can cause jank (e.g. messing up snackbar animations
                 // by showing the same snackbar twice in rapid succession).
@@ -74,25 +74,25 @@ public class CurrenciesViewModel extends AndroidViewModel
      * take only the first ever InitialIntent and all intents of other types
      * to avoid reloading data on config changes
      */
-    private ObservableTransformer<CurrenciesIntent, CurrenciesIntent> intentFilter =
+    private ObservableTransformer<RatesIntent, RatesIntent> intentFilter =
             intents -> intents.publish(shared ->
                     Observable.merge(
-                            shared.ofType(CurrenciesIntent.InitialIntent.class).take(1),
-                            shared.filter(intent -> !(intent instanceof CurrenciesIntent.InitialIntent))
+                            shared.ofType(RatesIntent.InitialIntent.class).take(1),
+                            shared.filter(intent -> !(intent instanceof RatesIntent.InitialIntent))
                     )
             );
 
-    private CurrenciesAction actionFromIntent(MviIntent intent) {
-        if (intent instanceof CurrenciesIntent.InitialIntent) {
-            return CurrenciesAction.LoadCurrencies.load(Constants.INITIAL_BASE_RATE.code);
+    private RatesAction actionFromIntent(MviIntent intent) {
+        if (intent instanceof RatesIntent.InitialIntent) {
+            return RatesAction.LoadRates.load(Constants.INITIAL_BASE_RATE.code);
         }
-        if (intent instanceof CurrenciesIntent.RefreshIntent) {
-            CurrenciesIntent.RefreshIntent refreshIntent = (CurrenciesIntent.RefreshIntent) intent;
-            return CurrenciesAction.ComputeExchangeRate.compute(refreshIntent.base(), refreshIntent.refreshAll());
+        if (intent instanceof RatesIntent.RefreshIntent) {
+            RatesIntent.RefreshIntent refreshIntent = (RatesIntent.RefreshIntent) intent;
+            return RatesAction.ComputeExchangeRate.compute(refreshIntent.base(), refreshIntent.refreshAll());
         }
-        if (intent instanceof CurrenciesIntent.AutoRefreshIntent) {
-            CurrenciesIntent.AutoRefreshIntent autoRefreshIntent = (CurrenciesIntent.AutoRefreshIntent) intent;
-            return CurrenciesAction.AutoRefreshRates.create(autoRefreshIntent.base());
+        if (intent instanceof RatesIntent.AutoRefreshIntent) {
+            RatesIntent.AutoRefreshIntent autoRefreshIntent = (RatesIntent.AutoRefreshIntent) intent;
+            return RatesAction.AutoRefreshRates.create(autoRefreshIntent.base());
         }
         throw new IllegalArgumentException("do not know how to treat this intent " + intent);
     }
@@ -104,13 +104,13 @@ public class CurrenciesViewModel extends AndroidViewModel
      * creates a new {@link MviViewState} by only updating the related fields.
      * This is basically like a big switch statement of all possible types for the {@link MviResult}
      */
-    private static BiFunction<CurrenciesViewState, CurrenciesResult, CurrenciesViewState> reducer =
+    private static BiFunction<RatesViewState, RatesResult, RatesViewState> reducer =
             (previousState, result) -> {
 
-        CurrenciesViewState.Builder stateBuilder = previousState.buildWith();
+        RatesViewState.Builder stateBuilder = previousState.buildWith();
 
-                if (result instanceof CurrenciesResult.LoadCurrencies) {
-                    CurrenciesResult.LoadCurrencies loadResult = (CurrenciesResult.LoadCurrencies) result;
+                if (result instanceof RatesResult.LoadRates) {
+                    RatesResult.LoadRates loadResult = (RatesResult.LoadRates) result;
 
                     switch (loadResult.status()) {
                         case SUCCESS:
@@ -131,39 +131,39 @@ public class CurrenciesViewModel extends AndroidViewModel
 
             };
 
-    private ObservableTransformer<CurrenciesAction.LoadCurrencies, CurrenciesResult.LoadCurrencies> loadCurrenciesProcessor =
+    private ObservableTransformer<RatesAction.LoadRates, RatesResult.LoadRates> loadCurrenciesProcessor =
             actions -> actions.flatMap(action ->
-                    currenciesRepository.getRates(action.base())
+                    ratesRepository.getRates(action.base())
 //                            .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
                             .map(response
-                                    -> CurrenciesResult.LoadCurrencies.success(
+                                    -> RatesResult.LoadRates.success(
                                             response.base, response.toCurrenciesList(BigDecimal.ONE)
                                     )
                             )
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.
-                            .onErrorReturn(CurrenciesResult.LoadCurrencies::failure)
+                            .onErrorReturn(RatesResult.LoadRates::failure)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             // Emit an InFlight event to notify the subscribers (e.g. the UI) we are
                             // doing work and waiting on a response.
                             // We emit it after observing on the UI thread to allow the event to be emitted
                             // on the current frame and avoid jank.
-                            .startWith(CurrenciesResult.LoadCurrencies.inFlight()));
+                            .startWith(RatesResult.LoadRates.inFlight()));
 
-    private ObservableTransformer<CurrenciesAction.ComputeExchangeRate, CurrenciesResult.LoadCurrencies> exchangeRatesProcessor =
+    private ObservableTransformer<RatesAction.ComputeExchangeRate, RatesResult.LoadRates> exchangeRatesProcessor =
             actions -> actions.flatMap(action ->
-                            currenciesRepository.getRates(action.base().code)
+                            ratesRepository.getRates(action.base().code)
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
-                            .map(result -> CurrenciesResult.LoadCurrencies.success(
+                            .map(result -> RatesResult.LoadRates.success(
                                     result.base,
                                     result.toCurrenciesList(action.base().value),
                                     action.refreshAll())
@@ -171,23 +171,23 @@ public class CurrenciesViewModel extends AndroidViewModel
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.
-                            .onErrorReturn(CurrenciesResult.LoadCurrencies::failure)
+                            .onErrorReturn(RatesResult.LoadRates::failure)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             // Emit an InFlight event to notify the subscribers (e.g. the UI) we are
                             // doing work and waiting on a response.
                             // We emit it after observing on the UI thread to allow the event to be emitted
                             // on the current frame and avoid jank.
-                            .startWith(CurrenciesResult.LoadCurrencies.inFlight()));
+                            .startWith(RatesResult.LoadRates.inFlight()));
 
-    private ObservableTransformer<CurrenciesAction.AutoRefreshRates, CurrenciesResult.LoadCurrencies> autoRefreshRatesProcessor =
+    private ObservableTransformer<RatesAction.AutoRefreshRates, RatesResult.LoadRates> autoRefreshRatesProcessor =
             actions -> actions.flatMap(action ->
-                    currenciesRepository.forceRefresh(action.base().code)
+                    ratesRepository.forceRefresh(action.base().code)
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
-                            .map(result -> CurrenciesResult.LoadCurrencies.success(
+                            .map(result -> RatesResult.LoadRates.success(
                                     result.base,
                                     result.toCurrenciesList(action.base().value),
                                     false)
@@ -195,27 +195,27 @@ public class CurrenciesViewModel extends AndroidViewModel
                             // Wrap any error into an immutable object and pass it down the stream
                             // without crashing.
                             // Because errors are data and hence, should just be part of the stream.
-                            .onErrorReturn(CurrenciesResult.LoadCurrencies::failure)
+                            .onErrorReturn(RatesResult.LoadRates::failure)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             // Emit an InFlight event to notify the subscribers (e.g. the UI) we are
                             // doing work and waiting on a response.
                             // We emit it after observing on the UI thread to allow the event to be emitted
                             // on the current frame and avoid jank.
-                            .startWith(CurrenciesResult.LoadCurrencies.inFlight()));
+                            .startWith(RatesResult.LoadRates.inFlight()));
 
-    private ObservableTransformer<CurrenciesAction, CurrenciesResult> actionProcessor =
+    private ObservableTransformer<RatesAction, RatesResult> actionProcessor =
             actions -> actions.publish(shared -> Observable.merge(
                     // Match LoadRates to loadRatesProcessor
-                    shared.ofType(CurrenciesAction.LoadCurrencies.class).compose(loadCurrenciesProcessor),
+                    shared.ofType(RatesAction.LoadRates.class).compose(loadCurrenciesProcessor),
                     // Match ComputeRates to ratesProcessor
-                    shared.ofType(CurrenciesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor),
-                    shared.ofType(CurrenciesAction.AutoRefreshRates.class).compose(autoRefreshRatesProcessor)
+                    shared.ofType(RatesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor),
+                    shared.ofType(RatesAction.AutoRefreshRates.class).compose(autoRefreshRatesProcessor)
                     .mergeWith(
                             // Error for not implemented actions
-                            shared.filter(v -> !(v instanceof CurrenciesAction.LoadCurrencies)
-                                    && !(v instanceof CurrenciesAction.ComputeExchangeRate)
-                                    && !(v instanceof CurrenciesAction.AutoRefreshRates))
+                            shared.filter(v -> !(v instanceof RatesAction.LoadRates)
+                                    && !(v instanceof RatesAction.ComputeExchangeRate)
+                                    && !(v instanceof RatesAction.AutoRefreshRates))
                                     .flatMap(w -> Observable.error(
                                             new IllegalArgumentException("Unknown Action type: " + w))))));
 

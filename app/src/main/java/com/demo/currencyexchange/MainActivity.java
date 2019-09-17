@@ -14,10 +14,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (null == savedInstanceState) {
 
-            CurrenciesFragment currenciesFragment = CurrenciesFragment.newInstance();
+            RatesFragment ratesFragment = RatesFragment.newInstance();
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.main_content, currenciesFragment, CurrenciesFragment.TAG)
+                    .replace(R.id.main_content, ratesFragment, RatesFragment.TAG)
                     .commit();
         }
     }

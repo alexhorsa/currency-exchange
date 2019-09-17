@@ -7,15 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ExchangeRates {
+public class RatesApiResponse {
 
     public String base;
     public Map<String, String> rates;
 
-    public List<Currency> toCurrenciesList(@NonNull BigDecimal baseValue) {
-        final List<Currency> result = new ArrayList<>();
+    public List<ExchangeRate> toCurrenciesList(@NonNull BigDecimal baseValue) {
+        final List<ExchangeRate> result = new ArrayList<>();
         result.add(
-                Currency
+                ExchangeRate
                         .newBuilder()
                         .code(base)
                         .value(baseValue)
@@ -27,7 +27,7 @@ public class ExchangeRates {
             final String currencyValue = entrySet.getValue();
             final BigDecimal value = new BigDecimal(currencyValue).multiply(baseValue);
             result.add(
-                    Currency
+                    ExchangeRate
                             .newBuilder()
                             .code(currencyCode)
                             .value(value)
