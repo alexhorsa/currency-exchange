@@ -1,4 +1,4 @@
-package com.demo.currencyexchange;
+package com.demo.currencyexchange.rates;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;

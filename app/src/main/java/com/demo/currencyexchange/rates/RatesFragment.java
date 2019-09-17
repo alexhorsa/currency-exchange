@@ -1,4 +1,4 @@
-package com.demo.currencyexchange;
+package com.demo.currencyexchange.rates;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.demo.currencyexchange.util.Constants;
+import com.demo.currencyexchange.R;
 import com.demo.currencyexchange.mvibase.MviView;
 
 import java.util.ArrayList;
@@ -27,7 +29,7 @@ import io.reactivex.subjects.PublishSubject;
 public class RatesFragment extends Fragment
         implements MviView<RatesIntent, RatesViewState> {
 
-    static final String TAG = "RatesFragment";
+    public static final String TAG = "RatesFragment";
 
     private RecyclerView currenciesRecyclerView;
     private RatesAdapter ratesAdapter;
@@ -39,7 +41,7 @@ public class RatesFragment extends Fragment
             PublishSubject.create();
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    static RatesFragment newInstance() {
+    public static RatesFragment newInstance() {
         return new RatesFragment();
     }
 

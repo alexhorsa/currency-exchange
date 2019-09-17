@@ -1,4 +1,4 @@
-package com.demo.currencyexchange;
+package com.demo.currencyexchange.rates;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.demo.currencyexchange.R;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;

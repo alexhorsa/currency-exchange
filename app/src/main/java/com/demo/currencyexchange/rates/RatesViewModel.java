@@ -1,10 +1,11 @@
-package com.demo.currencyexchange;
+package com.demo.currencyexchange.rates;
 
 import android.app.Application;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 
+import com.demo.currencyexchange.util.Constants;
 import com.demo.currencyexchange.mvibase.MviIntent;
 import com.demo.currencyexchange.mvibase.MviResult;
 import com.demo.currencyexchange.mvibase.MviView;
