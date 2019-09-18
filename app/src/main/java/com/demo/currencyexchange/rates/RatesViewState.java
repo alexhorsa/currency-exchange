@@ -13,7 +13,7 @@ abstract class RatesViewState implements MviViewState {
 
     public abstract boolean isLoading();
 
-    public abstract List<ExchangeRate> currencies();
+    public abstract List<ExchangeRate> rates();
 
     public abstract boolean refreshAll();
 
@@ -23,7 +23,7 @@ abstract class RatesViewState implements MviViewState {
     static RatesViewState idle() {
         return builder()
                 .isLoading(false)
-                .currencies(Collections.emptyList())
+                .rates(Collections.emptyList())
                 .refreshAll(false)
                 .build();
     }
@@ -39,11 +39,11 @@ abstract class RatesViewState implements MviViewState {
 
         public abstract Builder isLoading(boolean isLoading);
 
-        public abstract Builder currencies(List<ExchangeRate> currencies);
-
         public abstract Builder error(Throwable error);
 
         public abstract Builder refreshAll(boolean refreshAll);
+
+        public abstract Builder rates(List<ExchangeRate> rates);
 
         abstract RatesViewState build();
     }

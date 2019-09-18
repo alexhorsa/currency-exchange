@@ -31,7 +31,7 @@ public class RatesFragment extends Fragment
 
     public static final String TAG = "RatesFragment";
 
-    private RecyclerView currenciesRecyclerView;
+    private RecyclerView ratesRecyclerView;
     private RatesAdapter ratesAdapter;
 
     private RatesViewModel ratesViewModel;
@@ -59,10 +59,10 @@ public class RatesFragment extends Fragment
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        currenciesRecyclerView = view.findViewById(R.id.exchange_list);
+        ratesRecyclerView = view.findViewById(R.id.exchange_list);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
-        currenciesRecyclerView.setLayoutManager(linearLayoutManager);
-        currenciesRecyclerView.setAdapter(ratesAdapter);
+        ratesRecyclerView.setLayoutManager(linearLayoutManager);
+        ratesRecyclerView.setAdapter(ratesAdapter);
 
         ratesViewModel = ViewModelProviders.of(this).get(RatesViewModel.class);
 
@@ -74,11 +74,11 @@ public class RatesFragment extends Fragment
         super.onResume();
 
         disposables.add(ratesViewModel.states().subscribe(this::render, this::onError));
-        disposables.add(ratesAdapter.getCurrencyClickObservable().subscribe(
-                this::onCurrencyClicked, this::onError
+        disposables.add(ratesAdapter.getRateClickObservable().subscribe(
+                this::onExchangeRateClicked, this::onError
         ));
-        disposables.add(ratesAdapter.getCurrencyValueChangeObservable().subscribe(
-                this::onCurrencyChanged, this::onError
+        disposables.add(ratesAdapter.getRateValueChangeObservable().subscribe(
+                this::onExchangeRateValueChanged, this::onError
         ));
         startRefreshRatesEverySecond();
     }
@@ -113,12 +113,12 @@ public class RatesFragment extends Fragment
             return;
         }
 
-        if (state.currencies().isEmpty()) {
+        if (state.rates().isEmpty()) {
 
         } else {
-            ratesAdapter.updateData(state.currencies(), state.refreshAll());
+            ratesAdapter.updateData(state.rates(), state.refreshAll());
             if (state.refreshAll()) {
-                currenciesRecyclerView.scrollToPosition(0);
+                ratesRecyclerView.scrollToPosition(0);
             }
         }
     }
@@ -147,11 +147,11 @@ public class RatesFragment extends Fragment
                                 RatesIntent.AutoRefreshIntent.create(latestInput.base()));
     }
 
-    private void onCurrencyClicked(ExchangeRate exchangeRate) {
+    private void onExchangeRateClicked(ExchangeRate exchangeRate) {
         userInputIntentPublisher.onNext(RatesIntent.RefreshIntent.create(exchangeRate, true));
     }
 
-    private void onCurrencyChanged(ExchangeRate exchangeRate) {
+    private void onExchangeRateValueChanged(ExchangeRate exchangeRate) {
         userInputIntentPublisher.onNext(RatesIntent.RefreshIntent.create(exchangeRate, false));
     }
 

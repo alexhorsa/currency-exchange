@@ -12,7 +12,7 @@ public class RatesApiResponse {
     public String base;
     public Map<String, String> rates;
 
-    public List<ExchangeRate> toCurrenciesList(@NonNull BigDecimal baseValue) {
+    public List<ExchangeRate> toExchangeRatesList(@NonNull BigDecimal baseValue) {
         final List<ExchangeRate> result = new ArrayList<>();
         result.add(
                 ExchangeRate

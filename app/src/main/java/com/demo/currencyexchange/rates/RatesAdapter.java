@@ -25,24 +25,24 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     private static final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
 
-    private List<ExchangeRate> currencies;
+    private List<ExchangeRate> exchangeRates;
 
-    private PublishSubject<ExchangeRate> currencyClickObservable = PublishSubject.create();
-    private PublishSubject<ExchangeRate> currencyValueChangeObservable = PublishSubject.create();
+    private PublishSubject<ExchangeRate> rateClickObservable = PublishSubject.create();
+    private PublishSubject<ExchangeRate> rateValueChangeObservable = PublishSubject.create();
 
-    private ValueChangeWatcher currencyWatcher;
+    private ValueChangeWatcher exchangeRateWatcher;
 
-    RatesAdapter(List<ExchangeRate> currencies) {
-        this.currencies = currencies;
-        this.currencyWatcher = new ValueChangeWatcher(currencyValueChangeObservable);
+    RatesAdapter(List<ExchangeRate> exchangeRates) {
+        this.exchangeRates = exchangeRates;
+        this.exchangeRateWatcher = new ValueChangeWatcher(rateValueChangeObservable);
     }
 
-    Observable<ExchangeRate> getCurrencyClickObservable() {
-        return currencyClickObservable;
+    Observable<ExchangeRate> getRateClickObservable() {
+        return rateClickObservable;
     }
 
-    Observable<ExchangeRate> getCurrencyValueChangeObservable() {
-        return currencyValueChangeObservable;
+    Observable<ExchangeRate> getRateValueChangeObservable() {
+        return rateValueChangeObservable;
     }
 
     @NonNull
@@ -50,21 +50,21 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         final View rowView =
                 LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.item_currency, parent, false);
-        return new CurrencyViewHolder(rowView);
+                        .inflate(R.layout.item_exchange_rate, parent, false);
+        return new ExchangeRateViewHolder(rowView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        final ExchangeRate exchangeRate = currencies.get(position);
-        final CurrencyViewHolder currencyVH = (CurrencyViewHolder) holder;
+        final ExchangeRate exchangeRate = exchangeRates.get(position);
+        final ExchangeRateViewHolder rateVH = (ExchangeRateViewHolder) holder;
 
-        currencyVH.code.setText(exchangeRate.code);
+        rateVH.code.setText(exchangeRate.code);
 
         String amountText;
         if (position > 0) {
             amountText = decimalFormat.format(exchangeRate.value);
-            currencyVH.value.removeTextChangedListener(currencyWatcher);
+            rateVH.value.removeTextChangedListener(exchangeRateWatcher);
         } else {
             amountText
                     = exchangeRate.value.scale() >= 2
@@ -72,83 +72,37 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     : exchangeRate.value.toString();
         }
 
-        currencyVH.value.clearFocus();
-        currencyVH.value.setText(amountText);
+        rateVH.value.clearFocus();
+        rateVH.value.setText(amountText);
 
         if (position == 0) {
-            currencyWatcher.setExchangeRate(exchangeRate);
-            currencyWatcher.setTextView(currencyVH.value);
-            currencyVH.updateTextWatcher(currencyWatcher);
+            exchangeRateWatcher.setExchangeRate(exchangeRate);
+            exchangeRateWatcher.setTextView(rateVH.value);
+            rateVH.updateTextWatcher(exchangeRateWatcher);
         }
 
-//        currencyVH.updateTextWatcher(new TextWatcher() {
-//
-//            private String textBefore = "";
-//            private String textChanged;
-//
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//                if (!currencyVH.value.hasFocus()) return;
-//                textBefore = s.toString();
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
-//                if (!currencyVH.value.hasFocus()) return;
-//                Log.d("Adapter", "onTextChanged");
-//
-//                CharSequence strChange = charSequence.subSequence(start, start + count);
-//                textChanged = strChange.toString();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable editable) {
-//                if (!currencyVH.value.hasFocus()) return;
-//
-//                final String textValue = editable.toString();
-//                if (textValue.isEmpty()) return;
-//                if (".".equals(textChanged)) return;
-//
-//                Log.d("Adapter", "afterTextChanged - exchangeRate " + exchangeRate.code);
-//
-//                String result;
-//                if (textBefore.length() > editable.length()) { // Backspace detected
-//                    result = textBefore.substring(0, textBefore.length() - 1);
-//                } else {
-//                    result = textBefore + textChanged;
-//                }
-//
-////                EditText editText = currencyVH.value;
-////                editText.removeTextChangedListener(this);
-////                editText.setText(result);
-////                editText.addTextChangedListener(this);
-//
-//                exchangeRate.value = new BigDecimal(result);
-//                currencyValueChangeObservable.onNext(exchangeRate);
-//            }
-//        });
-        currencyVH.value.setOnFocusChangeListener((v, hasFocus) -> {
+        rateVH.value.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
-                currencyVH.value.post(() -> currencyVH.value.setSelection(currencyVH.value.length()));
+                rateVH.value.post(() -> rateVH.value.setSelection(rateVH.value.length()));
 
                 if (position > 0) {
-                    currencyClickObservable.onNext(exchangeRate);
+                    rateClickObservable.onNext(exchangeRate);
                 }
             }
         });
 
-        currencyVH.itemView.setOnClickListener(ignored -> currencyClickObservable.onNext(exchangeRate));
+        rateVH.itemView.setOnClickListener(ignored -> rateClickObservable.onNext(exchangeRate));
     }
 
     @Override
     public int getItemCount() {
-        if (null == currencies) return 0;
-        return currencies.size();
+        if (null == exchangeRates) return 0;
+        return exchangeRates.size();
     }
 
     public void updateData(List<ExchangeRate> currencies, boolean refreshAll) {
         if (null == currencies) throw new NullPointerException();
-        this.currencies = currencies;
+        this.exchangeRates = currencies;
         if (refreshAll) {
             notifyDataSetChanged();
         } else {
@@ -156,16 +110,16 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
     }
 
-    public static class CurrencyViewHolder extends RecyclerView.ViewHolder {
+    public static class ExchangeRateViewHolder extends RecyclerView.ViewHolder {
 
         TextView code;
         EditText value;
 
         private TextWatcher textWatcher;
 
-        CurrencyViewHolder(@NonNull View itemView) {
+        ExchangeRateViewHolder(@NonNull View itemView) {
             super(itemView);
-            code = itemView.findViewById(R.id.item_currency_name);
+            code = itemView.findViewById(R.id.item_currency_code);
             value = itemView.findViewById(R.id.item_currency_value);
         }
 
@@ -230,11 +184,6 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             } else {
                 result = textBefore + textChanged;
             }
-
-//                EditText editText = currencyVH.value;
-//                editText.removeTextChangedListener(this);
-//                editText.setText(result);
-//                editText.addTextChangedListener(this);
 
             exchangeRate.value = new BigDecimal(result);
             valueChangeStream.onNext(exchangeRate);

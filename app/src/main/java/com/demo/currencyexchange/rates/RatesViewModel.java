@@ -116,7 +116,7 @@ public class RatesViewModel extends AndroidViewModel
                     switch (loadResult.status()) {
                         case SUCCESS:
                             return stateBuilder.isLoading(false)
-                                    .currencies(loadResult.currencies())
+                                    .rates(loadResult.rates())
                                     .refreshAll(loadResult.refreshAll())
                                     .build();
                         case FAILURE:
@@ -132,17 +132,17 @@ public class RatesViewModel extends AndroidViewModel
 
             };
 
-    private ObservableTransformer<RatesAction.LoadRates, RatesResult.LoadRates> loadCurrenciesProcessor =
+    private ObservableTransformer<RatesAction.LoadRates, RatesResult.LoadRates> fetchRatesProcessor =
             actions -> actions.flatMap(action ->
                     ratesRepository.getRates(action.base())
-//                            .flatMap(result -> Single.just(result.rates.toCurrenciesList()))
+//                            .flatMap(result -> Single.just(result.rates.toExchangeRatesList()))
                             // Transform the Single to an Observable to allow emission of multiple
                             // events down the stream (e.g. the InFlight event)
                             .toObservable()
                             // Wrap returned data into an immutable object
                             .map(response
                                     -> RatesResult.LoadRates.success(
-                                            response.base, response.toCurrenciesList(BigDecimal.ONE)
+                                            response.base, response.toExchangeRatesList(BigDecimal.ONE)
                                     )
                             )
                             // Wrap any error into an immutable object and pass it down the stream
@@ -157,7 +157,7 @@ public class RatesViewModel extends AndroidViewModel
                             // on the current frame and avoid jank.
                             .startWith(RatesResult.LoadRates.inFlight()));
 
-    private ObservableTransformer<RatesAction.ComputeExchangeRate, RatesResult.LoadRates> exchangeRatesProcessor =
+    private ObservableTransformer<RatesAction.ComputeExchangeRate, RatesResult.LoadRates> adjustRatesProcessor =
             actions -> actions.flatMap(action ->
                             ratesRepository.getRates(action.base().code)
                             // Transform the Single to an Observable to allow emission of multiple
@@ -166,7 +166,7 @@ public class RatesViewModel extends AndroidViewModel
                             // Wrap returned data into an immutable object
                             .map(result -> RatesResult.LoadRates.success(
                                     result.base,
-                                    result.toCurrenciesList(action.base().value),
+                                    result.toExchangeRatesList(action.base().value),
                                     action.refreshAll())
                             )
                             // Wrap any error into an immutable object and pass it down the stream
@@ -190,7 +190,7 @@ public class RatesViewModel extends AndroidViewModel
                             // Wrap returned data into an immutable object
                             .map(result -> RatesResult.LoadRates.success(
                                     result.base,
-                                    result.toCurrenciesList(action.base().value),
+                                    result.toExchangeRatesList(action.base().value),
                                     false)
                             )
                             // Wrap any error into an immutable object and pass it down the stream
@@ -208,9 +208,9 @@ public class RatesViewModel extends AndroidViewModel
     private ObservableTransformer<RatesAction, RatesResult> actionProcessor =
             actions -> actions.publish(shared -> Observable.merge(
                     // Match LoadRates to loadRatesProcessor
-                    shared.ofType(RatesAction.LoadRates.class).compose(loadCurrenciesProcessor),
+                    shared.ofType(RatesAction.LoadRates.class).compose(fetchRatesProcessor),
                     // Match ComputeRates to ratesProcessor
-                    shared.ofType(RatesAction.ComputeExchangeRate.class).compose(exchangeRatesProcessor),
+                    shared.ofType(RatesAction.ComputeExchangeRate.class).compose(adjustRatesProcessor),
                     shared.ofType(RatesAction.AutoRefreshRates.class).compose(autoRefreshRatesProcessor)
                     .mergeWith(
                             // Error for not implemented actions

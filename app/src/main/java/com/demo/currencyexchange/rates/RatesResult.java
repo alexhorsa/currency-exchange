@@ -25,7 +25,7 @@ interface RatesResult extends MviResult {
         abstract String base();
 
         @Nullable
-        abstract List<ExchangeRate> currencies();
+        abstract List<ExchangeRate> rates();
 
         @NonNull
         abstract boolean refreshAll();
@@ -61,7 +61,7 @@ interface RatesResult extends MviResult {
         abstract LceStatus status();
 
         @Nullable
-        abstract List<ExchangeRate> currencies();
+        abstract List<ExchangeRate> rates();
 
         @Nullable
         abstract Throwable error();
