@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.demo.currencyexchange.R;
@@ -30,6 +31,7 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private PublishSubject<ExchangeRate> rateClickObservable = PublishSubject.create();
     private PublishSubject<ExchangeRate> rateValueChangeObservable = PublishSubject.create();
 
+    private RatesDiffCallback ratesDiffCallback = new RatesDiffCallback();
     private ValueChangeWatcher exchangeRateWatcher;
 
     RatesAdapter(List<ExchangeRate> exchangeRates) {
@@ -100,14 +102,22 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return exchangeRates.size();
     }
 
-    public void updateData(List<ExchangeRate> currencies, boolean refreshAll) {
-        if (null == currencies) throw new NullPointerException();
-        this.exchangeRates = currencies;
+    public void updateData(List<ExchangeRate> rates, boolean refreshAll) {
+        if (null == rates) throw new NullPointerException();
+
+//        ratesDiffCallback.setLists(this.exchangeRates, rates);
+//        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(ratesDiffCallback);
+
+        this.exchangeRates.clear();
+        this.exchangeRates.addAll(rates);
+
         if (refreshAll) {
             notifyDataSetChanged();
         } else {
-            notifyItemRangeChanged(1, currencies.size() - 1);
+            notifyItemRangeChanged(1, rates.size() - 1);
         }
+
+//        diffResult.dispatchUpdatesTo(this);
     }
 
     public static class ExchangeRateViewHolder extends RecyclerView.ViewHolder {

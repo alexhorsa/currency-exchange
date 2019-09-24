@@ -63,6 +63,7 @@ public class RatesFragment extends Fragment
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
         ratesRecyclerView.setLayoutManager(linearLayoutManager);
         ratesRecyclerView.setAdapter(ratesAdapter);
+        ratesRecyclerView.setHasFixedSize(true);
 
         ratesViewModel = ViewModelProviders.of(this).get(RatesViewModel.class);
 
@@ -116,7 +117,12 @@ public class RatesFragment extends Fragment
         if (state.rates().isEmpty()) {
 
         } else {
-            ratesAdapter.updateData(state.rates(), state.refreshAll());
+            boolean isFirstUpdate = false;
+            if (ratesAdapter.getItemCount() == 0) {
+                isFirstUpdate = true;
+            }
+            boolean refreshAll = state.refreshAll() || isFirstUpdate;
+            ratesAdapter.updateData(state.rates(), refreshAll);
             if (state.refreshAll()) {
                 ratesRecyclerView.scrollToPosition(0);
             }
