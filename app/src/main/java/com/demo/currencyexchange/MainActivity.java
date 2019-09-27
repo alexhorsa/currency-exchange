@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.demo.currencyexchange.rates.RatesFragment;
+import com.demo.currencyexchange.util.CurrencyDefinition;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         if (null == savedInstanceState) {
+            CurrencyDefinition.initialize(this);
 
             RatesFragment ratesFragment = RatesFragment.newInstance();
             getSupportFragmentManager()

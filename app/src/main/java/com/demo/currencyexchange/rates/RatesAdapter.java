@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.demo.currencyexchange.R;
+import com.demo.currencyexchange.util.CurrencyDefinition;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -59,9 +61,12 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         final ExchangeRate exchangeRate = exchangeRates.get(position);
+        final CurrencyDefinition currencyDefinition = CurrencyDefinition.findWithCode(exchangeRate.code);
         final ExchangeRateViewHolder rateVH = (ExchangeRateViewHolder) holder;
 
-        rateVH.code.setText(exchangeRate.code);
+        rateVH.flag.setImageResource(currencyDefinition.flagResId);
+        rateVH.code.setText(currencyDefinition.code);
+        rateVH.name.setText(currencyDefinition.name);
 
         String amountText;
         if (position > 0) {
@@ -122,14 +127,19 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     public static class ExchangeRateViewHolder extends RecyclerView.ViewHolder {
 
+        ImageView flag;
         TextView code;
+        TextView name;
         EditText value;
 
         private TextWatcher textWatcher;
 
         ExchangeRateViewHolder(@NonNull View itemView) {
             super(itemView);
+
+            flag = itemView.findViewById(R.id.item_currency_flag);
             code = itemView.findViewById(R.id.item_currency_code);
+            name = itemView.findViewById(R.id.item_currency_name);
             value = itemView.findViewById(R.id.item_currency_value);
         }
 
