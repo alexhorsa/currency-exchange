@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.demo.currencyexchange.util.Constants;
 import com.demo.currencyexchange.R;
 import com.demo.currencyexchange.mvibase.MviView;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,7 @@ public class RatesFragment extends Fragment
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ratesAdapter = new RatesAdapter(new ArrayList<>(0));
+        ratesAdapter = new RatesAdapter(new ArrayList<>(0), new Picasso.Builder(getContext()).build());
     }
 
     @Nullable

@@ -15,7 +15,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.demo.currencyexchange.R;
+import com.demo.currencyexchange.util.CropCircleTransformation;
 import com.demo.currencyexchange.util.CurrencyDefinition;
+import com.squareup.picasso.Picasso;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -36,9 +38,14 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     private RatesDiffCallback ratesDiffCallback = new RatesDiffCallback();
     private ValueChangeWatcher exchangeRateWatcher;
 
-    RatesAdapter(List<ExchangeRate> exchangeRates) {
+    private Picasso picasso;
+    private CropCircleTransformation circleTransformation;
+
+    RatesAdapter(List<ExchangeRate> exchangeRates, Picasso picasso) {
         this.exchangeRates = exchangeRates;
         this.exchangeRateWatcher = new ValueChangeWatcher(rateValueChangeObservable);
+        this.picasso = picasso;
+        this.circleTransformation = new CropCircleTransformation();
     }
 
     Observable<ExchangeRate> getRateClickObservable() {
@@ -64,7 +71,11 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         final CurrencyDefinition currencyDefinition = CurrencyDefinition.findWithCode(exchangeRate.code);
         final ExchangeRateViewHolder rateVH = (ExchangeRateViewHolder) holder;
 
-        rateVH.flag.setImageResource(currencyDefinition.flagResId);
+//        rateVH.flag.setImageResource(currencyDefinition.flagResId);
+        picasso
+                .load(currencyDefinition.flagResId)
+                .transform(circleTransformation)
+                .into(rateVH.flag);
         rateVH.code.setText(currencyDefinition.code);
         rateVH.name.setText(currencyDefinition.name);
 
