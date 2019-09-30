@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp"
+    android:layout_height="72dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <View
+        android:id="@+id/item_center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_centerVertical="true"/>
 
     <ImageView
         android:id="@+id/item_currency_flag"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_centerVertical="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
@@ -21,11 +27,14 @@
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/item_currency_flag"
         android:layout_toRightOf="@id/item_currency_flag"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
+        android:layout_above="@id/item_center_horizontal"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:fontFamily="@font/roboto_medium"
         android:gravity="center"
-        android:text="CODE"
-        android:textSize="18sp"
+        android:text="USD"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="16sp"
         />
 
     <TextView
@@ -36,9 +45,11 @@
         android:layout_alignStart="@id/item_currency_code"
         android:layout_alignLeft="@id/item_currency_code"
         android:layout_below="@id/item_currency_code"
+        android:fontFamily="@font/roboto_regular"
         android:gravity="center"
-        android:text="Name"
-        android:textSize="12sp"
+        android:text="US Dollar"
+        android:textColor="@color/colorTextSecondary"
+        android:textSize="14sp"
         />
 
     <EditText
@@ -48,8 +59,13 @@
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:fontFamily="@font/roboto_medium"
         android:gravity="end"
         android:text="125"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="20sp"
         android:inputType="numberDecimal" />
 
 </RelativeLayout>
