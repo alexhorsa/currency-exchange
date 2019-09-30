@@ -110,27 +110,29 @@ public class RatesViewModel extends AndroidViewModel
 
         RatesViewState.Builder stateBuilder = previousState.buildWith();
 
-                if (result instanceof RatesResult.LoadRates) {
-                    RatesResult.LoadRates loadResult = (RatesResult.LoadRates) result;
+        if (result instanceof RatesResult.LoadRates) {
+            RatesResult.LoadRates loadResult = (RatesResult.LoadRates) result;
 
-                    switch (loadResult.status()) {
-                        case SUCCESS:
-                            return stateBuilder.isLoading(false)
-                                    .rates(loadResult.rates())
-                                    .refreshAll(loadResult.refreshAll())
-                                    .build();
-                        case FAILURE:
-                            return stateBuilder.isLoading(false).error(loadResult.error()).build();
-                        case IN_FLIGHT:
-                            return stateBuilder.isLoading(true).build();
-                    }
-                } else {
-                    throw new IllegalArgumentException("Don't know this result " + result);
-                }
+            switch (loadResult.status()) {
+                case SUCCESS:
+                    return stateBuilder
+                            .isLoading(false)
+                            .rates(loadResult.rates())
+                            .refreshAll(loadResult.refreshAll())
+                            .error(null)
+                            .build();
+                case FAILURE:
+                    return stateBuilder.isLoading(false).error(loadResult.error()).build();
+                case IN_FLIGHT:
+                    return stateBuilder.isLoading(true).error(null).build();
+            }
+        } else {
+            throw new IllegalArgumentException("Don't know this result " + result);
+        }
 
-                throw new IllegalStateException("Mishandled result? Should never happen.");
+        throw new IllegalStateException("Mishandled result? Should never happen.");
 
-            };
+    };
 
     private ObservableTransformer<RatesAction.LoadRates, RatesResult.LoadRates> fetchRatesProcessor =
             actions -> actions.flatMap(action ->
