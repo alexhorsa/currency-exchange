@@ -34,6 +34,7 @@ public class RatesFragment extends Fragment
 
     private RecyclerView ratesRecyclerView;
     private RatesAdapter ratesAdapter;
+    private boolean isUserScrolling;
 
     private RatesViewModel ratesViewModel;
     private PublishSubject<RatesIntent.RefreshIntent> userInputIntentPublisher =
@@ -65,6 +66,7 @@ public class RatesFragment extends Fragment
         ratesRecyclerView.setLayoutManager(linearLayoutManager);
         ratesRecyclerView.setAdapter(ratesAdapter);
         ratesRecyclerView.setHasFixedSize(true);
+        ratesRecyclerView.addOnScrollListener(onRecyclerScrollListener);
 
         ratesViewModel = ViewModelProviders.of(this).get(RatesViewModel.class);
 
@@ -118,14 +120,16 @@ public class RatesFragment extends Fragment
         if (state.rates().isEmpty()) {
 
         } else {
-            boolean isFirstUpdate = false;
-            if (ratesAdapter.getItemCount() == 0) {
-                isFirstUpdate = true;
-            }
-            boolean refreshAll = state.refreshAll() || isFirstUpdate;
-            ratesAdapter.updateData(state.rates(), refreshAll);
-            if (state.refreshAll()) {
-                ratesRecyclerView.scrollToPosition(0);
+            if (!isUserScrolling) {
+                boolean isFirstUpdate = false;
+                if (ratesAdapter.getItemCount() == 0) {
+                    isFirstUpdate = true;
+                }
+                boolean refreshAll = state.refreshAll() || isFirstUpdate;
+                ratesAdapter.updateData(state.rates(), refreshAll);
+                if (state.refreshAll()) {
+                    ratesRecyclerView.scrollToPosition(0);
+                }
             }
         }
     }
@@ -176,4 +180,14 @@ public class RatesFragment extends Fragment
     private void onError(Throwable throwable) {
         Log.e(TAG, "onError", throwable);
     }
+
+    private final RecyclerView.OnScrollListener onRecyclerScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+            isUserScrolling
+                    = RecyclerView.SCROLL_STATE_DRAGGING == newState
+                    || RecyclerView.SCROLL_STATE_SETTLING == newState;
+        }
+    };
 }

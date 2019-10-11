@@ -3,6 +3,7 @@ package com.demo.currencyexchange.rates;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,10 +60,19 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        final View rowView =
-                LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.item_exchange_rate, parent, false);
-        return new ExchangeRateViewHolder(rowView);
+//        final View rowView =
+//                LayoutInflater.from(parent.getContext())
+//                        .inflate(R.layout.item_exchange_rate, parent, false);
+//        return new ExchangeRateViewHolder(rowView);
+
+        // Optimized
+        RatesItemView ratesItemView = new RatesItemView(parent.getContext());
+        ViewGroup.LayoutParams layoutParams = new RecyclerView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        ratesItemView.setLayoutParams(layoutParams);
+        return new ExchangeRateViewHolder(ratesItemView);
     }
 
     @Override
@@ -71,45 +81,46 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         final CurrencyDefinition currencyDefinition = CurrencyDefinition.findWithCode(exchangeRate.code);
         final ExchangeRateViewHolder rateVH = (ExchangeRateViewHolder) holder;
 
-//        rateVH.flag.setImageResource(currencyDefinition.flagResId);
-        picasso
-                .load(currencyDefinition.flagResId)
-                .transform(circleTransformation)
-                .into(rateVH.flag);
-        rateVH.code.setText(currencyDefinition.code);
-        rateVH.name.setText(currencyDefinition.name);
+        rateVH.ratesItemView.setRate(currencyDefinition, String.valueOf(exchangeRate.value));
 
-        String amountText;
-        if (position > 0) {
-            amountText = decimalFormat.format(exchangeRate.value);
-            rateVH.value.removeTextChangedListener(exchangeRateWatcher);
-        } else {
-            amountText
-                    = exchangeRate.value.scale() >= 2
-                    ? decimalFormat.format(exchangeRate.value)
-                    : exchangeRate.value.toString();
-        }
-
-        rateVH.value.clearFocus();
-        rateVH.value.setText(amountText);
-
-        if (position == 0) {
-            exchangeRateWatcher.setExchangeRate(exchangeRate);
-            exchangeRateWatcher.setTextView(rateVH.value);
-            rateVH.updateTextWatcher(exchangeRateWatcher);
-        }
-
-        rateVH.value.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) {
-                rateVH.value.post(() -> rateVH.value.setSelection(rateVH.value.length()));
-
-                if (position > 0) {
-                    rateClickObservable.onNext(exchangeRate);
-                }
-            }
-        });
-
-        rateVH.itemView.setOnClickListener(ignored -> rateClickObservable.onNext(exchangeRate));
+//        picasso
+//                .load(currencyDefinition.flagResId)
+//                .transform(circleTransformation)
+//                .into(rateVH.flag);
+//        rateVH.code.setText(currencyDefinition.code);
+//        rateVH.name.setText(currencyDefinition.name);
+//
+//        String amountText;
+//        if (position > 0) {
+//            amountText = decimalFormat.format(exchangeRate.value);
+//            rateVH.value.removeTextChangedListener(exchangeRateWatcher);
+//        } else {
+//            amountText
+//                    = exchangeRate.value.scale() >= 2
+//                    ? decimalFormat.format(exchangeRate.value)
+//                    : exchangeRate.value.toString();
+//        }
+//
+//        rateVH.value.clearFocus();
+//        rateVH.value.setText(amountText);
+//
+//        if (position == 0) {
+//            exchangeRateWatcher.setExchangeRate(exchangeRate);
+//            exchangeRateWatcher.setTextView(rateVH.value);
+//            rateVH.updateTextWatcher(exchangeRateWatcher);
+//        }
+//
+//        rateVH.value.setOnFocusChangeListener((v, hasFocus) -> {
+//            if (hasFocus) {
+//                rateVH.value.post(() -> rateVH.value.setSelection(rateVH.value.length()));
+//
+//                if (position > 0) {
+//                    rateClickObservable.onNext(exchangeRate);
+//                }
+//            }
+//        });
+//
+//        rateVH.itemView.setOnClickListener(ignored -> rateClickObservable.onNext(exchangeRate));
     }
 
     @Override
@@ -143,6 +154,8 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         TextView name;
         EditText value;
 
+        RatesItemView ratesItemView;
+
         private TextWatcher textWatcher;
 
         ExchangeRateViewHolder(@NonNull View itemView) {
@@ -152,6 +165,11 @@ public class RatesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             code = itemView.findViewById(R.id.item_currency_code);
             name = itemView.findViewById(R.id.item_currency_name);
             value = itemView.findViewById(R.id.item_currency_value);
+        }
+
+        ExchangeRateViewHolder(RatesItemView itemView) {
+            super(itemView);
+            ratesItemView = itemView;
         }
 
         void updateTextWatcher(TextWatcher newTextWatcher) {
